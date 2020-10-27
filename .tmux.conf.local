@@ -43,6 +43,7 @@ tmux_conf_new_session_prompt=false
 # RGB 24-bit colour support (tmux >= 2.2), possible values are:
 #  - true
 #  - false (default)
+tmux_conf_theme_24b_colour=true
 tmux_conf_24b_colour=false
 
 # default theme
@@ -217,8 +218,9 @@ tmux_conf_theme_right_separator_sub="|"
 #     - #{uptime_s}
 #     - #{username}
 #     - #{username_ssh}
-tmux_conf_theme_status_left=" ❐ #S | ↑#{?uptime_y, #{uptime_y}y,}#{?uptime_d, #{uptime_d}d,}#{?uptime_h, #{uptime_h}h,}#{?uptime_m, #{uptime_m}m,} "
-tmux_conf_theme_status_right="#{prefix}#{pairing}#{synchronized} #{?battery_status, #{battery_status},}#{?battery_bar, #{battery_bar},}#{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{username}#{root} | #{hostname} "
+tmux_conf_theme_status_left=' #S | ↑#{?uptime_y, #{uptime_y}y,}#{?uptime_d, #{uptime_d}d,}#{?uptime_h, #{uptime_h}h,}#{?uptime_m, #{uptime_m}m,} '
+tmux_conf_theme_status_right='#{prefix}#{pairing}#{synchronized} #{?battery_status, #{battery_status},}#{?battery_bar, #{battery_bar},}#{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{username}#{root} | #{hostname} '
+#tmux_conf_theme_status_right='#{prefix}#{pairing}#{synchronized #{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{username}#{root} | #{hostname} '
 
 # status left style
 tmux_conf_theme_status_left_fg="$tmux_conf_theme_colour_6,$tmux_conf_theme_colour_7,$tmux_conf_theme_colour_8"
@@ -237,10 +239,11 @@ tmux_conf_theme_pairing_bg="none"
 tmux_conf_theme_pairing_attr="none"
 
 # prefix indicator
-tmux_conf_theme_prefix="⌨ "                 # U+2328
-tmux_conf_theme_prefix_fg="none"
-tmux_conf_theme_prefix_bg="none"
-tmux_conf_theme_prefix_attr="none"
+#tmux_conf_theme_prefix="⌨ "                 # U+2328
+tmux_conf_theme_prefix='* '            # U+2328
+tmux_conf_theme_prefix_fg='none'
+tmux_conf_theme_prefix_bg='none'
+tmux_conf_theme_prefix_attr='none'
 
 # root indicator
 tmux_conf_theme_root="!"
@@ -255,10 +258,10 @@ tmux_conf_theme_synchronized_bg="none"
 tmux_conf_theme_synchronized_attr="none"
 
 # battery bar symbols
-tmux_conf_battery_bar_symbol_full="◼"
-tmux_conf_battery_bar_symbol_empty="◻"
-#tmux_conf_battery_bar_symbol_full="♥"
-#tmux_conf_battery_bar_symbol_empty="·"
+#tmux_conf_battery_bar_symbol_full='◼'
+#tmux_conf_battery_bar_symbol_empty='◻'
+tmux_conf_battery_bar_symbol_full='♥'
+tmux_conf_battery_bar_symbol_empty='·'
 
 # battery bar length (in number of symbols), possible values are:
 #   - auto
@@ -305,33 +308,32 @@ tmux_conf_theme_clock_style="24"
 #   - false (default)
 # on macOS, this requires installing reattach-to-user-namespace, see README.md
 # on Linux, this requires xsel or xclip
-tmux_conf_copy_to_os_clipboard=false
+tmux_conf_copy_to_os_clipboard=true
 
 
 # -- user customizations -------------------------------------------------------
 # this is the place to override or undo settings
 
 # increase history size
-#set -g history-limit 10000
+set -g history-limit 40000
 
 # start with mouse mode enabled
-#set -g mouse on
+set -g mouse on
 
 # force Vi mode
 #   really you should export VISUAL or EDITOR environment variable, see manual
-#set -g status-keys vi
-#set -g mode-keys vi
+set -g status-keys vi
+set -g mode-keys vi
 
 # replace C-b by C-a instead of using both prefixes
 # set -gu prefix2
-# unbind C-a
+unbind C-a
 # unbind C-b
 # set -g prefix C-a
 # bind C-a send-prefix
 
 # move status line to top
 #set -g status-position top
-
 
 # -- custom variables ----------------------------------------------------------
 # to define a custom #{foo} variable, define a POSIX shell function between the
@@ -356,3 +358,27 @@ tmux_conf_copy_to_os_clipboard=false
 #
 # "$@"
 # # /!\ do not remove the previous line
+
+# Action when we are in a remote session
+if-shell '[ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]' "set -g status-position top; set -g prefix C-a; unbind C-b; bind C-a send-prefix;"
+
+
+# List of plugins
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'soyuka/tmux-current-pane-hostname'
+
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+set -g @plugin 'tmux-plugins/tmux-yank'
+
+
+#set -g status-right '#[fg=cyan,bold] #U@#H #[default]#[fg=blue]#(tmux display-message -p "#{pane_current_path}" | sed "s#$HOME#~#g") #[fg=red]%H:%M %d-%b-%y#[default]'
+# https://github.com/tmux-plugins/tmux-prefix-highlight
+
+# Plugin configuration
+set -g @continuum-restore 'on'
+
+set -g focus-events on
+
+# Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
+run '~/.tmux/plugins/tpm/tpm'
