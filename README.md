@@ -10,7 +10,7 @@ Installation
 
 Requirements:
 
-  - tmux **`>= 2.1`** (soon `>= 2.4`) running inside Linux, Mac, OpenBSD, Cygwin
+  - tmux **`>= 2.3`** (soon `>= 2.4`) running inside Linux, Mac, OpenBSD, Cygwin
     or WSL
   - awk, perl and sed
   - outside of tmux, `$TERM` must be set to `xterm-256color`
@@ -109,12 +109,12 @@ Features
    if available
  - laptop battery status line information
  - uptime status line information
- - optional highlight of focused pane (tmux `>= 2.1`)
+ - optional highlight of focused pane
  - configurable new windows and panes behavior (optionally retain current path)
  - SSH/Mosh aware split pane (reconnects to remote server)
  - copy to OS clipboard (needs [`reattach-to-user-namespace`][reattach-to-user-namespace]
    on macOS, `xsel` or `xclip` on Linux)
- - support for 4-digit hexadecimal Unicode characters (requires `perl` or Bash >= 4.1.2)
+ - support for 4-digit hexadecimal Unicode characters
  - [Facebook PathPicker][] integration if available
  - [Urlview][] integration if available
 

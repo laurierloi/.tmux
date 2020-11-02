@@ -43,8 +43,7 @@ tmux_conf_new_session_prompt=false
 # RGB 24-bit colour support (tmux >= 2.2), possible values are:
 #  - true
 #  - false (default)
-tmux_conf_theme_24b_colour=true
-tmux_conf_24b_colour=false
+tmux_conf_24b_colour=true
 
 # default theme
 tmux_conf_theme_colour_1="#080808"    # dark gray
@@ -335,7 +334,44 @@ unbind C-a
 # move status line to top
 #set -g status-position top
 
+# Action when we are in a remote session
+if-shell '[ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]' "set -g status-position top; set -g prefix C-a; unbind C-b; bind C-a send-prefix;"
+
+# -- tpm -----------------------------------------------------------------------
+
+# while I don't use tpm myself, many people requested official support so here
+# is a seamless integration that automatically installs plugins in parallel
+
+# whenever a plugin introduces a variable to be used in 'status-left' or
+# 'status-right', you can use it in 'tmux_conf_theme_status_left' and
+# 'tmux_conf_theme_status_right' variables.
+
+# /!\ do not add set -g @plugin 'tmux-plugins/tpm'
+# /!\ do not add run '~/.tmux/plugins/tpm/tpm'
+
+# to enable a plugin, use the 'set -g @plugin' syntax:
+# visit https://github.com/tmux-plugins for available plugins
+#set -g @plugin 'tmux-plugins/tmux-resurrect'
+#set -g @plugin 'tmux-plugins/tmux-continuum'
+#set -g @continuum-restore 'on'
+# List of plugins
+set -g @plugin 'soyuka/tmux-current-pane-hostname'
+
+set -g @plugin 'tmux-plugins/tmux-copycat'
+set -g @plugin 'tmux-plugins/tmux-cpu'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+set -g @plugin 'tmux-plugins/tmux-yank'
+
+
+# Plugin configuration
+set -g @continuum-restore 'on'
+
+set -g focus-events on
+
+
 # -- custom variables ----------------------------------------------------------
+
 # to define a custom #{foo} variable, define a POSIX shell function between the
 # '# EOF' and the '# "$@"' lines. Please note that the opening brace { character
 # must be on the same line as the function name otherwise the parse won't detect
@@ -359,26 +395,3 @@ unbind C-a
 # "$@"
 # # /!\ do not remove the previous line
 
-# Action when we are in a remote session
-if-shell '[ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]' "set -g status-position top; set -g prefix C-a; unbind C-b; bind C-a send-prefix;"
-
-
-# List of plugins
-set -g @plugin 'tmux-plugins/tpm'
-set -g @plugin 'soyuka/tmux-current-pane-hostname'
-
-set -g @plugin 'tmux-plugins/tmux-resurrect'
-set -g @plugin 'tmux-plugins/tmux-continuum'
-set -g @plugin 'tmux-plugins/tmux-yank'
-
-
-#set -g status-right '#[fg=cyan,bold] #U@#H #[default]#[fg=blue]#(tmux display-message -p "#{pane_current_path}" | sed "s#$HOME#~#g") #[fg=red]%H:%M %d-%b-%y#[default]'
-# https://github.com/tmux-plugins/tmux-prefix-highlight
-
-# Plugin configuration
-set -g @continuum-restore 'on'
-
-set -g focus-events on
-
-# Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
-run '~/.tmux/plugins/tpm/tpm'
