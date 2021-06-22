@@ -35,7 +35,7 @@ tmux_conf_new_pane_reconnect_ssh=false
 # prompt for session name when creating a new session, possible values are:
 #   - true
 #   - false (default)
-tmux_conf_new_session_prompt=false
+tmux_conf_new_session_prompt=true
 
 
 # -- display -------------------------------------------------------------------
@@ -218,7 +218,7 @@ tmux_conf_theme_right_separator_sub="|"
 #     - #{username}
 #     - #{username_ssh}
 tmux_conf_theme_status_left=' #S | ↑#{?uptime_y, #{uptime_y}y,}#{?uptime_d, #{uptime_d}d,}#{?uptime_h, #{uptime_h}h,}#{?uptime_m, #{uptime_m}m,} '
-tmux_conf_theme_status_right='#{prefix}#{pairing}#{synchronized} CPU #{cpu_fg_color}#{cpu_percentage} , RAM #{ram_fg_color}#{ram_percentage} ,#{?battery_status, #{battery_status},}#{?battery_bar, #{battery_bar},}#{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{username}#{root} | #{hostname} '
+tmux_conf_theme_status_right='#{prefix}#{pairing}#{synchronized}#{continuum_status}#{?battery_status, #{battery_status},}#{?battery_bar, #{battery_bar},}#{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{username}#{root} | #{hostname} '
 #tmux_conf_theme_status_right='#{prefix}#{pairing}#{synchronized #{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{username}#{root} | #{hostname} '
 
 # status left style
@@ -325,17 +325,41 @@ set -g status-keys vi
 set -g mode-keys vi
 
 # replace C-b by C-a instead of using both prefixes
-set -gu prefix2
-unbind C-a
+#set -gu prefix2
+#unbind C-a
 # unbind C-b
 # set -g prefix C-a
 # bind C-a send-prefix
 
 # move status line to top
 #set -g status-position top
+set -g status-position bottom
 
 # Action when we are in a remote session
-if-shell '[ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]' "set -g status-position top; set -g prefix C-a; unbind C-b; bind C-a send-prefix;"
+#if-shell '[ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]' "set -g status-position top; set -g prefix C-a; unbind C-b; bind C-a send-prefix;"
+
+# Smart pane switching with awareness of Vim splits.
+# See: https://github.com/christoomey/vim-tmux-navigator
+is_vim="ps -o state= -o comm= -t '#{pane_tty}' \
+    | grep -iqE '^[^TXZ ]+ +(\\S+\\/)(^|\/)g?(view|vim|ssh|mosh?)(diff)?$'"
+#is_vim="ps -o state= -o comm= -t '#{pane_tty}' \
+#    | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|n?vim?x?)(diff)?$'"
+
+bind-key -n 'C-h' if-shell "$is_vim" 'send-keys C-h'  'select-pane -L'
+bind-key -n 'C-j' if-shell "$is_vim" 'send-keys C-j'  'select-pane -D'
+bind-key -n 'C-k' if-shell "$is_vim" 'send-keys C-k'  'select-pane -U'
+bind-key -n 'C-l' if-shell "$is_vim" 'send-keys C-l'  'select-pane -R'
+tmux_version='$(tmux -V | sed -En "s/^tmux ([0-9]+(.[0-9]+)?).*/\1/p")'
+if-shell -b '[ "$(echo "$tmux_version < 3.0" | bc)" = 1 ]' \
+    "bind-key -n 'C-\\' if-shell \"$is_vim\" 'send-keys C-\\'  'select-pane -l'"
+if-shell -b '[ "$(echo "$tmux_version >= 3.0" | bc)" = 1 ]' \
+    "bind-key -n 'C-\\' if-shell \"$is_vim\" 'send-keys C-\\\\'  'select-pane -l'"
+
+bind-key -T copy-mode-vi 'C-h' select-pane -L
+bind-key -T copy-mode-vi 'C-j' select-pane -D
+bind-key -T copy-mode-vi 'C-k' select-pane -U
+bind-key -T copy-mode-vi 'C-l' select-pane -R
+bind-key -T copy-mode-vi 'C-\' select-pane -l
 
 # -- tpm -----------------------------------------------------------------------
 
@@ -362,12 +386,13 @@ set -g @plugin 'tmux-plugins/tmux-cpu'
 set -g @plugin 'tmux-plugins/tmux-resurrect'
 set -g @plugin 'tmux-plugins/tmux-continuum'
 set -g @plugin 'tmux-plugins/tmux-yank'
-
+set -g @plugin 'christoomey/vim-tmux-navigator'
 
 # Plugin configuration
-set -g @continuum-restore 'on'
+set -g @resurrect-strategy-vim 'session'
 
 set -g focus-events on
+set -g @continuum-restore 'on'
 
 
 # -- custom variables ----------------------------------------------------------
